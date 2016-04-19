@@ -12,7 +12,8 @@ unsigned char len = 0;
 //mpu 6050 vars
 const int MPU_addr=0x68;  // I2C address of the MPU-6050
 int16_t AcX,AcY,AcZ,Tmp,GyX,GyY,GyZ;
-const int bleLedPin=10;
+const int bleLedPin=13;
+const int adoPin = 5;
 
 //wind sensor vars
 volatile unsigned long previousAnemometer;
@@ -40,12 +41,12 @@ const unsigned long debounce=50;
 //blend micro pins/interrupts
 const int anemometerPin=1;
 const int anemometerInterrupt=3;
-const int anemometerLedPin=12;
+const int anemometerLedPin=10;
 bool anemometerLedStatus=false;
 const int vanePin=0;
 const int vaneInterrupt=2;
-const int vaneLedPin=13;
-bool vaneLedStatus=false;
+//const int vaneLedPin=11;
+//bool vaneLedStatus=false;
 
 void setup() {
   //logging setup
@@ -59,6 +60,9 @@ void setup() {
     Serial.println(F("BLE initialized"));
   }
   pinMode(bleLedPin,OUTPUT);
+  //pinMode(adoPin,OUTPUT);
+
+  //digitalWrite(adoPin,HIGH);
 
   //mpu 6050 setup
   Wire.begin();
@@ -71,7 +75,7 @@ void setup() {
   //wind setup
   heartbeat=0;
   lastPrintHeartbeat=0;
-  pinMode(vaneLedPin, OUTPUT);
+  //pinMode(vaneLedPin, OUTPUT);
   pinMode(anemometerLedPin, OUTPUT);
   pinMode(anemometerPin, INPUT_PULLUP);
   pinMode(vanePin,INPUT_PULLUP);
@@ -116,7 +120,7 @@ void loop()
   
   //digitalWrite(vaneLedPin, LOW); 
   //digitalWrite(anemometerLedPin, LOW); 
-  delay(200);
+  delay(900);
 }
 
 void writeSerialData()
@@ -148,41 +152,41 @@ void writeSerialData()
 void writeBleData()
 {
       //make a byte array that we can send via uart, terminate with 1s
-//      buffer[0] = (byte) anemometerDifference;
-//      buffer[1] = (byte) anemometerDifference >> 8;
-//      buffer[2] = (byte) anemometerDifference >> 16;
-//      buffer[3] = (byte) anemometerDifference >> 24;
-//      buffer[4] = (byte) vaneDifference;
-//      buffer[5] = (byte) vaneDifference >> 8;
-//      buffer[6] = (byte) vaneDifference >> 16;
-//      buffer[7] = (byte) vaneDifference >> 24;
-//      buffer[8] = (byte) AcX;
-//      buffer[9] = (byte) AcX >> 8;
-//      buffer[10] = (byte) AcY;
-//      buffer[11] = (byte) AcY >> 8;
-//      buffer[12] = (byte) AcZ;
-//      buffer[13] = (byte) AcZ >> 8;
-//      buffer[14] = (byte)0;
-//      buffer[15] = (byte)0;
+      buffer[0] = (byte) anemometerDifference;
+      buffer[1] = (byte) anemometerDifference >> 8;
+      buffer[2] = (byte) anemometerDifference >> 16;
+      buffer[3] = (byte) anemometerDifference >> 24;
+      buffer[4] = (byte) vaneDifference;
+      buffer[5] = (byte) vaneDifference >> 8;
+      buffer[6] = (byte) vaneDifference >> 16;
+      buffer[7] = (byte) vaneDifference >> 24;
+      buffer[8] = (byte) AcX;
+      buffer[9] = (byte) AcX >> 8;
+      buffer[10] = (byte) AcY;
+      buffer[11] = (byte) AcY >> 8;
+      buffer[12] = (byte) AcZ;
+      buffer[13] = (byte) AcZ >> 8;
+      buffer[14] = (byte)0;
+      buffer[15] = (byte)0;
 //      buffer[16] = (byte)0;
 //      buffer[17] = (byte)0;
 //      buffer[18] = (byte)0;
 //      buffer[19] = (byte)0;
 
-    buffer[0] = (byte)0;
-    buffer[1] = (byte)1;
-    buffer[2] = (byte)2;
-    buffer[3] = (byte)3;
-    buffer[4] = (byte)4;
-    buffer[5] = (byte)5;
-    buffer[6] = (byte)6;
-    buffer[7] = (byte)7;
-    buffer[8] = (byte)8;
-    buffer[9] = (byte)9;
-    ble_write_bytes(buffer,10);
+//    buffer[0] = (byte)0;
+//    buffer[1] = (byte)1;
+//    buffer[2] = (byte)2;
+//    buffer[3] = (byte)3;
+//    buffer[4] = (byte)4;
+//    buffer[5] = (byte)5;
+//    buffer[6] = (byte)6;
+//    buffer[7] = (byte)7;
+//    buffer[8] = (byte)8;
+//    buffer[9] = (byte)9;
+    ble_write_bytes(buffer,15);
 
-      //String stringOne =  String("speed="+String((int)speed(anemometerDifference))+", angle="+String((int)angleDegrees(vaneDifference,anemometerDifference))+", xyz="+String(AcX)+","+String(AcY)+","+String(AcZ)+"\n"); 
-      //stringOne.getBytes(buffer,stringOne.length());
+//      String stringOne =  String("speed="+String((int)speed(anemometerDifference))+", angle="+String((int)angleDegrees(vaneDifference,anemometerDifference))+", xyz="+String(AcX)+","+String(AcY)+","+String(AcZ)+"\n"); 
+//      stringOne.getBytes(buffer,stringOne.length());
       
       //ble_write_bytes(buffer,stringOne.length());
 }
@@ -222,8 +226,8 @@ void vane()
   unsigned long now = millis();
   if(now > latestVaneBounce + debounce && digitalRead(vanePin)==HIGH)
   {
-    vaneLedStatus = !vaneLedStatus;
-    digitalWrite(vaneLedPin, vaneLedStatus);
+    //vaneLedStatus = !vaneLedStatus;
+    //digitalWrite(vaneLedPin, vaneLedStatus);
     latestVane=now;
     if(latestVane>=latestAnemometer)
     {
