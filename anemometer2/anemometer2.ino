@@ -70,6 +70,8 @@ void setup() {
   Wire.write(0x6B);  // PWR_MGMT_1 register
   Wire.write(0);     // set to zero (wakes up the MPU-6050)
   Wire.endTransmission(true);
+
+
   Serial.println(F("MPU initialized"));
 
   //wind setup
@@ -88,12 +90,13 @@ void setup() {
 
 void loop()
 {
-  //if(heartbeat!=lastPrintHeartbeat)
+  if(heartbeat!=lastPrintHeartbeat)
   {
-    if(!enableBle || ble_connected())
+    processMpuData();
+    writeSerialData();
+    if(ble_connected())
     {
-      processMpuData();
-      if(enableBle && ble_connected)
+      if(enableBle && ble_connected())
       {
         digitalWrite(bleLedPin,HIGH);
         writeBleData();
@@ -102,16 +105,13 @@ void loop()
       {
         digitalWrite(bleLedPin,LOW);
       }
-      //if(Serial.available())
-      {
-        writeSerialData();
-      }
       lastPrintHeartbeat=heartbeat;
     }
     else
     {
       digitalWrite(bleLedPin,LOW);
     }
+    
   }
   if(enableBle)
   {
