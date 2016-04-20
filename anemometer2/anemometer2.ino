@@ -6,8 +6,8 @@
 
 //ble vars
 const bool enableBle=true;
-unsigned char buf[50] = {0};
-unsigned char len = 0;
+//unsigned char buf[50] = {0};
+//unsigned char len = 0;
 
 //mpu 6050 vars
 const int MPU_addr=0x68;  // I2C address of the MPU-6050
@@ -29,6 +29,8 @@ volatile unsigned long heartbeat;
 unsigned long lastPrintHeartbeat;
 byte buffer[20];
 const unsigned long debounce=50;
+
+unsigned char tobytes[4];
 
 //uno pins/interrupts
 //const int anemometerPin=3;
@@ -137,12 +139,12 @@ void writeSerialData()
   //Serial.print(previousAnemometer);
   //Serial.print(",la= ");
   //Serial.print(latestAnemometer);
-  //Serial.print(",ad= ");
-  //Serial.print(anemometerDifference);
+  Serial.print(",ad= ");
+  Serial.print(anemometerDifference);
   //Serial.print(",lv=");
   //Serial.print(latestVane);
-  //Serial.print(",vd=");
-  //Serial.print(vaneDifference);
+  Serial.print(",vd=");
+  Serial.print(vaneDifference);
   Serial.print(", a=");
   Serial.print(angleDegrees(vaneDifference,anemometerDifference));
   Serial.print(", s=");
@@ -152,20 +154,46 @@ void writeSerialData()
 void writeBleData()
 {
       //make a byte array that we can send via uart, terminate with 1s
-      buffer[0] = (byte) anemometerDifference;
-      buffer[1] = (byte) anemometerDifference >> 8;
-      buffer[2] = (byte) anemometerDifference >> 16;
-      buffer[3] = (byte) anemometerDifference >> 24;
-      buffer[4] = (byte) vaneDifference;
-      buffer[5] = (byte) vaneDifference >> 8;
-      buffer[6] = (byte) vaneDifference >> 16;
-      buffer[7] = (byte) vaneDifference >> 24;
-      buffer[8] = (byte) AcX;
-      buffer[9] = (byte) AcX >> 8;
-      buffer[10] = (byte) AcY;
-      buffer[11] = (byte) AcY >> 8;
-      buffer[12] = (byte) AcZ;
-      buffer[13] = (byte) AcZ >> 8;
+      unsigned long ad = anemometerDifference;
+      memcpy(tobytes,&ad,sizeof(long int));
+      buffer[0] = tobytes[0];
+      buffer[1] = tobytes[1];
+      buffer[2] = tobytes[2];
+      buffer[3] = tobytes[3];
+      unsigned long vd = vaneDifference;
+      memcpy(tobytes,&vd,sizeof(long int));
+      buffer[4] = tobytes[0];
+      buffer[5] = tobytes[1];
+      buffer[6] = tobytes[2];
+      buffer[7] = tobytes[3];
+      //buffer[0] = (byte) anemometerDifference;
+      //buffer[1] = (byte) anemometerDifference >> 8;
+      //buffer[2] = (byte) anemometerDifference >> 16;
+      //buffer[3] = (byte) anemometerDifference >> 24;
+      //buffer[4] = (byte) vaneDifference;
+      //buffer[5] = (byte) vaneDifference >> 8;
+      //buffer[6] = (byte) vaneDifference >> 16;
+      //buffer[7] = (byte) vaneDifference >> 24;
+
+      memcpy(tobytes,&AcX,sizeof(int16_t));
+      buffer[8]=tobytes[0];
+      buffer[9]=tobytes[1];
+
+      memcpy(tobytes,&AcY,sizeof(int16_t));
+      buffer[10]=tobytes[0];
+      buffer[11]=tobytes[1];
+
+      memcpy(tobytes,&AcZ,sizeof(int16_t));
+      buffer[12]=tobytes[0];
+      buffer[13]=tobytes[1];
+      
+      //buffer[8] = (byte) AcX;
+      //buffer[9] = (byte) AcX >> 8;
+      //buffer[10] = (byte) AcY;
+      //buffer[11] = (byte) AcY >> 8;
+      //buffer[12] = (byte) AcZ;
+      //buffer[13] = (byte) AcZ >> 8;
+      
       buffer[14] = (byte)0;
       buffer[15] = (byte)0;
 //      buffer[16] = (byte)0;
@@ -272,6 +300,15 @@ float speed(long closureRate)
 
 float angleDegrees(long vaneDifference,long anemometerDifference)
 {
-  return ((float)vaneDifference/(float)anemometerDifference)*360.0;
+  float angle = (((float)vaneDifference/(float)anemometerDifference)*(float)360.0);
+  while(angle>360)
+  {
+    angle=angle - 360;
+  }
+  angle = 360-angle;
+  return angle;
 }
+
+  
+
 
