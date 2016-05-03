@@ -59,7 +59,6 @@ void setup() {
   {
     ble_set_name("MrGibbs");
     ble_begin();
-    Serial.println(F("BLE initialized"));
   }
   pinMode(bleLedPin,OUTPUT);
   //pinMode(adoPin,OUTPUT);
@@ -74,7 +73,7 @@ void setup() {
   Wire.endTransmission(true);
 
 
-  Serial.println(F("MPU initialized"));
+  //Serial.println(F("MPU initialized"));
 
   //wind setup
   heartbeat=0;
@@ -83,11 +82,11 @@ void setup() {
   pinMode(anemometerLedPin, OUTPUT);
   pinMode(anemometerPin, INPUT_PULLUP);
   pinMode(vanePin,INPUT_PULLUP);
-  attachInterrupt(anemometerInterrupt,anemometer,CHANGE);
-  attachInterrupt(vaneInterrupt,vane,CHANGE);
-  Serial.println(F("Anemometer initialized"));
+  attachInterrupt(anemometerInterrupt,anemometer,/*CHANGE*/RISING);
+  attachInterrupt(vaneInterrupt,vane,/*CHANGE*/RISING);
+  //Serial.println(F("Anemometer initialized"));
 
-  Serial.println(F("Startup Complete"));
+  //Serial.println(F("Startup Complete"));
 }
 
 void loop()
@@ -95,28 +94,27 @@ void loop()
   if(heartbeat!=lastPrintHeartbeat)
   {
     processMpuData();
-    writeSerialData();
+    //writeSerialData();
     if(ble_connected())
     {
       if(enableBle && ble_connected())
       {
-        digitalWrite(bleLedPin,HIGH);
         writeBleData();
       }
-      else
-      {
-        digitalWrite(bleLedPin,LOW);
-      }
       lastPrintHeartbeat=heartbeat;
+    }
+  }
+
+  if(enableBle)
+  {
+    if(ble_connected())
+    {
+      digitalWrite(bleLedPin,HIGH);
     }
     else
     {
       digitalWrite(bleLedPin,LOW);
     }
-    
-  }
-  if(enableBle)
-  {
     ble_do_events();
   }
   
@@ -166,14 +164,6 @@ void writeBleData()
       buffer[5] = tobytes[1];
       buffer[6] = tobytes[2];
       buffer[7] = tobytes[3];
-      //buffer[0] = (byte) anemometerDifference;
-      //buffer[1] = (byte) anemometerDifference >> 8;
-      //buffer[2] = (byte) anemometerDifference >> 16;
-      //buffer[3] = (byte) anemometerDifference >> 24;
-      //buffer[4] = (byte) vaneDifference;
-      //buffer[5] = (byte) vaneDifference >> 8;
-      //buffer[6] = (byte) vaneDifference >> 16;
-      //buffer[7] = (byte) vaneDifference >> 24;
 
       memcpy(tobytes,&AcX,sizeof(int16_t));
       buffer[8]=tobytes[0];
@@ -187,36 +177,11 @@ void writeBleData()
       buffer[12]=tobytes[0];
       buffer[13]=tobytes[1];
       
-      //buffer[8] = (byte) AcX;
-      //buffer[9] = (byte) AcX >> 8;
-      //buffer[10] = (byte) AcY;
-      //buffer[11] = (byte) AcY >> 8;
-      //buffer[12] = (byte) AcZ;
-      //buffer[13] = (byte) AcZ >> 8;
-      
       buffer[14] = (byte)0;
       buffer[15] = (byte)0;
-//      buffer[16] = (byte)0;
-//      buffer[17] = (byte)0;
-//      buffer[18] = (byte)0;
-//      buffer[19] = (byte)0;
 
-//    buffer[0] = (byte)0;
-//    buffer[1] = (byte)1;
-//    buffer[2] = (byte)2;
-//    buffer[3] = (byte)3;
-//    buffer[4] = (byte)4;
-//    buffer[5] = (byte)5;
-//    buffer[6] = (byte)6;
-//    buffer[7] = (byte)7;
-//    buffer[8] = (byte)8;
-//    buffer[9] = (byte)9;
-    ble_write_bytes(buffer,15);
+      ble_write_bytes(buffer,15);
 
-//      String stringOne =  String("speed="+String((int)speed(anemometerDifference))+", angle="+String((int)angleDegrees(vaneDifference,anemometerDifference))+", xyz="+String(AcX)+","+String(AcY)+","+String(AcZ)+"\n"); 
-//      stringOne.getBytes(buffer,stringOne.length());
-      
-      //ble_write_bytes(buffer,stringOne.length());
 }
 
 void processMpuData()
@@ -237,7 +202,7 @@ void processMpuData()
 void anemometer()
 {
   unsigned long now = millis();
-  if(now>latestAnemometerBounce+debounce && digitalRead(anemometerPin)==HIGH)
+  if(now>latestAnemometerBounce+debounce /*&& digitalRead(anemometerPin)==HIGH*/)
   {
     anemometerLedStatus = !anemometerLedStatus;
     digitalWrite(anemometerLedPin, anemometerLedStatus); 
@@ -252,7 +217,7 @@ void anemometer()
 void vane()
 {
   unsigned long now = millis();
-  if(now > latestVaneBounce + debounce && digitalRead(vanePin)==HIGH)
+  if(now > latestVaneBounce + debounce /*&& digitalRead(vanePin)==HIGH*/)
   {
     //vaneLedStatus = !vaneLedStatus;
     //digitalWrite(vaneLedPin, vaneLedStatus);
