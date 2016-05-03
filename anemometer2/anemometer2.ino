@@ -103,6 +103,9 @@ void loop()
       }
       lastPrintHeartbeat=heartbeat;
     }
+
+    anemometerLedStatus = !anemometerLedStatus;
+    digitalWrite(anemometerLedPin, anemometerLedStatus); 
   }
 
   if(enableBle)
@@ -118,8 +121,6 @@ void loop()
     ble_do_events();
   }
   
-  //digitalWrite(vaneLedPin, LOW); 
-  //digitalWrite(anemometerLedPin, LOW); 
   delay(900);
 }
 
@@ -204,8 +205,6 @@ void anemometer()
   unsigned long now = millis();
   if(now>latestAnemometerBounce+debounce /*&& digitalRead(anemometerPin)==HIGH*/)
   {
-    anemometerLedStatus = !anemometerLedStatus;
-    digitalWrite(anemometerLedPin, anemometerLedStatus); 
     previousAnemometer = latestAnemometer;
     latestAnemometer = now;
     anemometerDifference = latestAnemometer - previousAnemometer;
@@ -226,14 +225,9 @@ void vane()
     {
       vaneDifference = latestVane - latestAnemometer;
     }
-    else if(latestVane>=previousAnemometer)
-    {
-      vaneDifference = latestVane - previousAnemometer;
-    }
     else
     {
-      //this shouldn't happen
-      vaneDifference = 0;
+      vaneDifference = (latestAnemometer - previousAnemometer)-(latestAnemometer - latestVane);
     }
   }
   latestVaneBounce=now;
