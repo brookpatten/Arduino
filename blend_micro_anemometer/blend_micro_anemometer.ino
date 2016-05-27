@@ -29,8 +29,8 @@ unsigned long latestVane;
 unsigned long vaneDifference;
 
 //wind sensor hardware
-const int anemometerPin=1;
-const int vanePin=0;
+const int anemometerPin=0;
+const int vanePin=1;
 
 const int anemometerLedPin=10;
 bool anemometerLedStatus=false;
