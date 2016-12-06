@@ -24,18 +24,6 @@
 #include <Adafruit_GPS.h>
 #include "Adafruit_LEDBackpack.h"
 
-
-// Set to false to display time in 12 hour format, or true to use 24 hour:
-#define TIME_24_HOUR      false
-
-// Offset the hours from UTC (universal time) to your local time by changing
-// this value.  The GPS time will be in UTC so lookup the offset for your
-// local time from a site like:
-//   https://en.wikipedia.org/wiki/List_of_UTC_time_offsets
-// This value, -7, will set the time to UTC-7 or Pacific Standard Time during
-// daylight savings time.
-#define HOUR_OFFSET       -7
-
 // I2C address of the display.  Stick with the default address of 0x70
 // unless you've changed the address jumpers on the back of the display.
 #define DISPLAY_ADDRESS   0x70
@@ -48,6 +36,7 @@ SoftwareSerial gpsSerial(8, 7);  // GPS breakout/shield will use a
                                  // software serial connection with 
                                  // TX = pin 8 and RX = pin 7.
 Adafruit_GPS gps(&gpsSerial);
+float maxKnots = 0;
 
 
 void setup() {
@@ -68,7 +57,7 @@ void setup() {
   gps.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
 
   // Use a 1 hz, once a second, update rate.
-  gps.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+  gps.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ);
   
   // Enable the interrupt to parse GPS data.
   enableGPSInterrupt();
@@ -82,10 +71,21 @@ void loop() {
     gps.parse(gps.lastNMEA());
   }
 
-  // Show the time on the display by turning it into a numeric
-  // value, like 3:30 turns into 330, by multiplying the hour by
-  // 100 and then adding the minutes.
-  int displayValue = gps.speed;
+  float knots = gps.speed;
+
+  if(knots>maxKnots){
+    maxKnots = knots;
+  }
+
+  if(false){ //max button is down
+    knots = maxKnots;
+  }
+  
+  float mph = knots * 1.15078;
+  int displayValue = (int)mph;
+
+  //just for debugging purposes
+  displayValue = 67;
 
   // Now print the time value to the display.
   clockDisplay.print(displayValue, DEC);
