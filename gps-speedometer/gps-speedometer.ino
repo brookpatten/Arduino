@@ -38,7 +38,7 @@ SoftwareSerial gpsSerial(8, 7);  // GPS breakout/shield will use a
 Adafruit_GPS gps(&gpsSerial);
 float maxKnots = 0;
 int counter=0;
-
+int maxSwitchPin=9;
 
 void setup() {
   // Setup function runs once at startup to initialize the display and GPS.
@@ -48,6 +48,8 @@ void setup() {
   Serial.println("Speedometer starting!");
 
   i2cScan();
+
+  pinMode(maxSwitchPin,INPUT);
 
   // Setup the display.
   clockDisplay.begin(DISPLAY_ADDRESS);
@@ -68,9 +70,53 @@ void setup() {
   
 }
 
-void loop() {
-  // Loop function runs over and over again to implement the clock logic.
+void scanner(){
+  //Serial.print("Scanning:");
+  //Serial.print(counter,DEC);
+  //Serial.print(":");
+  if(counter % 10 == 0)
+  {
+    clockDisplay.writeDigitRaw(3,16);
+    clockDisplay.writeDigitRaw(4,0);
+    //Serial.println("1");
+  }
+  else if(counter % 10 == 1 || counter % 10 == 9)
+  {
+    clockDisplay.writeDigitRaw(3,32);
+    clockDisplay.writeDigitRaw(4,0);
+    //Serial.println("2");
+  }
+  else if(counter % 10 == 2 || counter % 10 == 8)
+  {
+    clockDisplay.writeDigitRaw(3,1);
+    clockDisplay.writeDigitRaw(4,0);
+    //Serial.println("3");
+  }
+  else if(counter % 10 == 3 || counter % 10 == 7)
+  {
+    clockDisplay.writeDigitRaw(3,0);
+    clockDisplay.writeDigitRaw(4,1);
+    //Serial.println("4");
+  }
+  else if(counter % 10 == 4 || counter % 10 == 6)
+  {
+    clockDisplay.writeDigitRaw(3,0);
+    clockDisplay.writeDigitRaw(4,2);
+    //Serial.println("5");
+  }
+  else if(counter % 10 == 5)
+  {
+    clockDisplay.writeDigitRaw(3,0);
+    clockDisplay.writeDigitRaw(4,4);
+    //Serial.println("6");
+  }
+  clockDisplay.writeDisplay();
+  counter++;
+  delay(100);
+}
 
+void loop() {
+  
   // Check if GPS has new data and parse it.
   if (gps.newNMEAreceived()) {
     gps.parse(gps.lastNMEA());
@@ -79,11 +125,7 @@ void loop() {
     {
       Serial.print("Satellites:");
       Serial.println(gps.satellites,DEC);
-      Serial.print("Fix:");
-      Serial.println(gps.fixquality,DEC);
-      //Serial.println(gps.lastNMEA());
-      clockDisplay.println(gps.satellites, DEC);
-      clockDisplay.writeDisplay();
+      scanner();
     }
     else
     {
@@ -93,37 +135,26 @@ void loop() {
         maxKnots = knots;
       }
     
-      if(false){ //max button is down
-        knots = maxKnots;
-      }
+      //if(digitalRead(maxSwitchPin)==1){ //max button is down
+      //  knots = maxKnots;
+      //}
       
       float mph = knots * 1.15078;
     
       int displayValue = (int)mph;
 
-      //displayValue = counter;
-      //counter++;
-      //if(counter>99)
-      //{
-      //  counter = 0;
-      //}
-    
       Serial.print("Speed:");
       Serial.println(displayValue,DEC);
       
       clockDisplay.println(displayValue, DEC);
       clockDisplay.writeDisplay();
-
-      //delay(1000);
+      //delay(250);
     }
   }
   else
   {
-    clockDisplay.println(0, DEC);
-    clockDisplay.writeDisplay();
-  }
-
-  
+    //scanner();
+  }  
 }
 
 SIGNAL(TIMER0_COMPA_vect) {
